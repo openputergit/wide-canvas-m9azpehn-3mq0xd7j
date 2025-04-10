@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Dashboard</title>
+    <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #3730a3;
+            --secondary: #06b6d4;
+            --accent: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --success: #10b981;
+        }
+        
+        /* Glassmorphism Theme */
+        .glassmorphism {
+            --bg-primary: rgba(15, 23, 42, 0.8);
+            --bg-secondary: rgba(30, 41, 59, 0.7);
+            --bg-card: rgba(30, 41, 59, 0.5);
+            --bg-hover: rgba(51, 65, 85, 0.6);
+            --border-color: rgba(148, 163, 184, 0.2);
+            --text-primary: rgba(248, 250, 252, 0.9);
+            --text-secondary: rgba(203, 213, 225, 0.8);
+            --text-muted: rgba(148, 163, 184, 0.7);
+            --shadow-color: rgba(0, 0, 0, 0.25);
+            --backdrop-blur: 10px;
+        }
+        
+        .light-mode {
+            --bg-primary: rgba(248, 250, 252, 0.8);
+            --bg-secondary: rgba(241, 245, 249, 0.7);
+            --bg-card: rgba(226, 232, 240, 0.5);
+            --bg-hover: rgba(203, 213, 225, 0.6);
+            --border-color: rgba(148, 163, 184, 0.2);
+            --text-primary: rgba(15, 23, 42, 0.9);
+            --text-secondary: rgba(30, 41, 59, 0.8);
+            --text-muted: rgba(71, 85, 105, 0.7);
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --backdrop-blur: 10px;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-image: url('https://images.unsplash.com/photo-1557682250-4b6b00ff547d?q=80&w=2029&auto=format&fit=crop');
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+        
+        .glass-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(var(--backdrop-blur));
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            box-shadow: 0 4px 16px var(--shadow-color);
+            transition: all 0.3s ease;
+        }
+        
+        .glass-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px var(--shadow-color);
+        }
+        
+        .glass-button {
+            background: var(--bg-secondary);
+            backdrop-filter: blur(var(--backdrop-blur));
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .glass-button:hover {
+            background: var(--bg-hover);
+        }
+        
+        .glass-input {
+            background: var(--bg-card);
+            backdrop-filter: blur(var(--backdrop-blur));
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+        }
+        
+        .glass-input:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+        
+        .sidebar {
+            background: var(--bg-primary);
+            backdrop-filter: blur(var(--backdrop-blur));
+            width: 280px;
+            height: 100vh;
+            border-right: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+        
+        .sidebar.collapsed {
+            width: 80px;
+        }
+        
+        .header {
+            background: var(--bg-primary);
+            backdrop-filter: blur(var(--backdrop-blur));
+            border-bottom: 1px solid var(--border-color);
+            height: 70px;
+        }
+        
+        .sidebar-item {
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        
+        .sidebar-item:hover {
+            background: var(--bg-hover);
+        }
+        
+        .sidebar-item.active {
+            background: rgba(var(--primary-rgb), 0.2);
+            color: var(--primary);
+        }
+        
+        .submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            margin-left: 2rem;
+        }
+        
+        .submenu.open {
+            max-height: 500px;
+        }
+        
+        .stat-value {
+            text-shadow: 0 0 10px rgba(var(--primary-rgb), 0.3);
+        }
+        
+        .notification-dot {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 18px;
+            height: 18px;
+            background-color: var(--danger);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+        }
+        
+        .dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            width: 300px;
+            background: var(--bg-primary);
+            backdrop-filter: blur(var(--backdrop-blur));
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 16px var(--shadow-color);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+        
+        .dropdown.open {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(5px);
+        }
+        
+        .tooltip {
+            position: absolute;
+            background: var(--bg-primary);
+            border-radius: 4px;
+            padding: 5px 10px;
+            font-size: 12px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            pointer-events: none;
+            z-index: 200;
+        }
+        
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 80px;
+            }
+            
+            .sidebar:hover {
+                width: 280px;
+            }
+            
+            .main-content {
+                margin-left: 80px;
+            }
+            
+            .header {
+                left: 80px;
+                width: calc(100% - 80px);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                height: 60px;
+            }
+        }
+        
+        /* Pulse Animation */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        /* Progress Bar Styles */
+        .progress {
+            height: 6px;
+            border-radius: 3px;
+            overflow: hidden;
+            background: var(--bg-secondary);
+        }
+        
+        .progress-bar {
+            height: 100%;
+            border-radius: 3px;
+        }
+        
+        /* Transitions & Animations */
+        .fade-enter {
+            opacity: 0;
+        }
+        
+        .fade-enter-active {
+            opacity: 1;
+            transition: opacity 300ms;
+        }
+        
+        .fade-exit {
+            opacity: 1;
+        }
+        
+        .fade-exit-active {
+            opacity: 0;
+            transition: opacity 300ms;
+        }
+        
+        /* Contextual colors */
+        .text-success { color: var(--success); }
+        .text-warning { color: var(--warning); }
+        .text-danger { color: var(--danger); }
+        .bg-success { background-color: var(--success); }
+        .bg-warning { background-color: var(--warning); }
+        .bg-danger { background-color: var(--danger); }
+    </style>
+</head>
+<body class="glassmorphism">
+    <!-- Sidebar -->
+    <div id="sidebar" class="sidebar fixed left-0 top-0 h-full overflow-y-auto">
+        <div class="flex flex-col h-full">
+            <!-- Logo -->
+            <div class="flex items-center p-5 h-[70px]">
+                <div class="flex items-center justify-center bg-purple-600 rounded-lg h-10 w-10 mr-3">
+                    <i class="bi bi-hdd-stack-fill text-xl text-white"></i>
+                </div>
+                <span class="text-xl font-semibold text-white sidebar-text">QuantumDash</span>
+            </div>
+            
+            <div class="px-4 py-2">
+                <div class="sidebar-text py-2 text-xs uppercase font-semibold text-gray-400">Main</div>
+            </div>
+            
+            <!-- Navigation -->
+            <nav class="flex-grow px-4">
+                <div class="space-y-1">
+                    <a href="#" class="sidebar-item active flex items-center p-3 text-white">
+                        <div class="w-8 text-center"><i class="bi bi-grid-1x2-fill text-lg"></i></div>
+                        <span class="ml-3 sidebar-text">Dashboard</span>
+                    </a>
+                    
+                    <!-- Analytics with submenu -->
+                    <div class="sidebar-dropdown">
+                        <button class="sidebar-item flex items-center justify-between w-full p-3 text-gray-300 hover:text-white">
+                            <div class="flex items-center">
+                                <div class="w-8 text-center"><i class="bi bi-graph-up text-lg"></i></div>
+                                <span class="ml-3 sidebar-text">Analytics</span>
+                            </div>
+                            <i class="sidebar-text bi bi-chevron-down text-sm transition-transform duration-300 arrow-icon"></i>
+                        </button>
+                        <div class="submenu">
+                            <a href="#" class="block p-2 pl-14 text-gray-400 hover:text-white">Performance</a>
+                            <a href="#" class="block p-2 pl-14 text-gray-400 hover:text-white">Metrics</a>
+                            <a href="#" class="block p-2 pl-14 text-gray-400 hover:text-white">Reports</a>
+                        </div>
+                    </div>
+                    
+                    <!-- Users with submenu -->
+                    <div class="sidebar-dropdown">
+                        <button class="sidebar-item flex items-center justify-between w-full p-3 text-gray-300 hover:text-white">
+                            <div class="flex items-center">
+                                <div class="w-8 text-center"><i class="bi bi-people-fill text-lg"></i></div>
+                                <span class="ml-3 sidebar-text">Users</span>
+                            </div>
+                            <i class="sidebar-text bi bi-chevron-down text-sm transition-transform duration-300 arrow-icon"></i>
+                        </button>
+                        <div class="submenu">
+                            <a href="#" class="block p-2 pl-14 text-gray-400 hover:text-white">Management</a>
+                            <a href="#" class="block p-2 pl-14 text-gray-400 hover:text-white">Permissions</a>
+                            <a href="#" class="block p-2 pl-14 text-gray-400 hover:text-white">Activity</a>
+                        </div>
+                    </div>
+                    
+                    <a href="#" class="sidebar-item flex items-center p-3 text-gray-300 hover:text-white">
+                        <div class="w-8 text-center"><i class="bi bi-wallet2 text-lg"></i></div>
+                        <span class="ml-3 sidebar-text">Transactions</span>
+                    </a>
+                    
+                    <a href="#" class="sidebar-item flex items-center p-3 text-gray-300 hover:text-white">
+                        <div class="w-8 text-center"><i class="bi bi-calendar-check text-lg"></i></div>
+                        <span class="ml-3 sidebar-text">Calendar</span>
+                    </a>
+                    
+                    <div class="sidebar-text py-4 text-xs uppercase font-semibold text-gray-400">System</div>
+                    
+                    <a href="#" class="sidebar-item flex items-center p-3 text-gray-300 hover:text-white">
+                        <div class="w-8 text-center"><i class="bi bi-folder2-open text-lg"></i></div>
+                        <span class="ml-3 sidebar-text">Documents</span>
+                    </a>
+                    
+                    <a href="#" class="sidebar-item flex items-center p-3 text-gray-300 hover:text-white">
+                        <div class="w-8 text-center"><i class="bi bi-bell text-lg"></i></div>
+                        <span class="ml-3 sidebar-text">Notifications</span>
+                        <span class="sidebar-text ml-auto bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">5</span>
+                    </a>
+                    
+                    <a href="#" class="sidebar-item flex items-center p-3 text-gray-300 hover:text-white">
+                        <div class="w-8 text-center"><i class="bi bi-gear text-lg"></i></div>
+                        <span class="ml-3 sidebar-text">Settings</span>
+                    </a>
+                </div>
+            </nav>
+            
+            <!-- Footer Info -->
+            <div class="p-4 text-xs text-gray-400 border-t border-gray-700 mt-auto">
+                <div id="location" class="mb-1 flex items-center">
+                    <i class="bi bi-geo-alt mr-1"></i> 
+                    <span>Loading location...</span>
+                </div>
+                <div id="ip" class="mb-1 flex items-center">
+                    <i class="bi bi-globe mr-1"></i>
+                    <span>Loading IP...</span>
+                </div>
+                <div id="time" class="mb-1 flex items-center">
+                    <i class="bi bi-clock mr-1"></i>
+                    <span>Loading time...</span>
+                </div>
+                <div class="mt-2 text-gray-500 sidebar-text">
+                    <span>QuantumDash v1.4.2</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="header fixed top-0 right-0 left-0 ml-[280px] z-40 flex items-center px-6">
+        <!-- Left Section -->
+        <div class="flex items-center">
+            <button id="sidebar-toggle" class="glass-button p-2 text-gray-300 mr-4">
+                <i class="bi bi-list text-xl"></i>
+            </button>
+            <div class="text-sm hidden lg:flex items-center">
+                <ol class="flex text-gray-400">
+                    <li><a href="#" class="hover:text-white">Home</a></li>
+                    <li><i class="bi bi-chevron-right mx-2 text-xs"></i></li>
+                    <li><a href="#" class="hover:text-white">Analytics</a></li>
+                    <li><i class="bi bi-chevron-right mx-2 text-xs"></i></li>
+                    <li class="text-white">Dashboard</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- Middle - Search -->
+        <div class="flex-1 max-w-2xl mx-auto relative">
+            <div class="relative">
+                <input type="search" placeholder="Search for companies, reports, or users..." class="glass-input w-full py-2 px-4 pl-10 text-sm focus:ring-2 focus:ring-purple-500">
+                <i class="bi bi-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+            </div>
+            <div id="search-suggestions" class="dropdown w-full left-0 right-0">
+                <div class="p-3 border-b border-gray-700">
+                    <h3 class="text-xs font-semibold text-gray-400 uppercase">Recent Searches</h3>
+                </div>
+                <div class="p-2">
+                    <a href="#" class="block p-2 hover:bg-gray-700 rounded-lg">
+                        <div class="text-sm text-white">Acme Corporation</div>
+                        <div class="text-xs text-gray-400">Company • Technology</div>
+                    </a>
+                    <a href="#" class="block p-2 hover:bg-gray-700 rounded-lg">
+                        <div class="text-sm text-white">Q3 Financial Report</div>
+                        <div class="text-xs text-gray-400">Report • Finance</div>
+                    </a>
+                    <a href="#" class="block p-2 hover:bg-gray-700 rounded-lg">
+                        <div class="text-sm text-white">John Smith</div>
+                        <div class="text-xs text-gray-400">User • Administrator</div>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Section -->
+        <div class="flex items-center space-x-3">
+            <div id="date-display" class="hidden md:block text-gray-300 text-sm mr-2">
+                <span id="current-date">Loading date...</span>
+            </div>
+            
+            <button id="fullscreen-btn" class="glass-button p-2 text-gray-300 relative" title="Toggle Fullscreen">
+                <i class="bi bi-arrows-fullscreen"></i>
+            </button>
+            
+            <button id="themeToggle" class="glass-button p-2 text-gray-300 relative" title="Toggle Theme">
+                <i class="bi bi-moon-stars-fill"></i>
+            </button>
+            
+            <div class="relative">
+                <button id="notifications-btn" class="glass-button p-2 text-gray-300 relative" title="Notifications">
+                    <i class="bi bi-bell-fill"></i>
+                    <span class="notification-dot">3</span>
+                </button>
+                <div id="notifications-dropdown" class="dropdown">
+                    <div class="flex items-center justify-between p-4 border-b border-gray-700">
+                        <h3 class="font-semibold">Notifications</h3>
+                        <span class="bg-purple-600 text-white text-xs rounded-full px-2 py-1">3 New</span>
+                    </div>
+                    <div class="max-h-80 overflow-y-auto">
+                        <a href="#" class="flex p-4 border-b border-gray-700 hover:bg-gray-800">
+                            <div class="mr-3 bg-blue-500 rounded-full p-2">
+                                <i class="bi bi-envelope text-white"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium">New message received</p>
+                                <p class="text-xs text-gray-400">John Doe sent you a message</p>
+                                <p class="text-xs text-gray-500 mt-1">2 minutes ago</p>
+                            </div>
+                        </a>
+                        <a href="#" class="flex p-4 border-b border-gray-700 hover:bg-gray-800">
+                            <div class="mr-3 bg-green-500 rounded-full p-2">
+                                <i class="bi bi-check-circle text-white"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium">Task completed</p>
+                                <p class="text-xs text-gray-400">Project milestone achieved</p>
+                                <p class="text-xs text-gray-500 mt-1">1 hour ago</p>
+                            </div>
+                        </a>
+                        <a href="#" class="flex p-4 border-b border-gray-700 hover:bg-gray-800">
+                            <div class="mr-3 bg-yellow-500 rounded-full p-2">
+                                <i class="bi bi-exclamation-triangle text-white"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium">System warning</p>
+                                <p class="text-xs text-gray-400">Server load at 92%</p>
+                                <p class="text-xs text-gray-500 mt-1">3 hours ago</p>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="p-3 text-center">
+                        <a href="#" class="text-sm text-purple-400 hover:text-purple-300">View all notifications</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="relative">
+                <button id="messages-btn" class="glass-button p-2 text-gray-300 relative" title="Messages">
+                    <i class="bi bi-chat-dots-fill"></i>
+                    <span class="notification-dot">5</span>
+                </button>
+                <div id="messages-dropdown" class="dropdown">
+                    <div class="flex items-center justify-between p-4 border-b border-gray-700">
+                        <h3 class="font-semibold">Messages</h3>
+                        <span class="bg-purple-600 text-white text-xs rounded-full px-2 py-1">5 New</span>
+                    </div>
+                    <div class="max-h-80 overflow-y-auto">
+                        <a href="#" class="flex p-4 border-b border-gray-700 hover:bg-gray-800">
+                            <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&h=120&auto=format" class="w-10 h-10 rounded-full mr-3" alt="User">
+                            <div>
+                                <p class="text-sm font-medium">John Doe</p>
+                                <p class="text-xs text-gray-400">Hey, can we meet today?</p>
+                                <p class="text-xs text-gray-500 mt-1">5 minutes ago</p>
+                            </div>
+                        </a>
+                        <a href="#" class="flex p-4 border-b border-gray-700 hover:bg-gray-800">
+                            <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&h=120&auto=format" class="w-10 h-10 rounded-full mr-3" alt="User">
+                            <div>
+                                <p class="text-sm font-medium">Sarah Wilson</p>
+                                <p class="text-xs text-gray-400">The project is ready for review</p>
+                                <p class="text-xs text-gray-500 mt-1">1 hour ago</p>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="p-3 text-center">
+                        <a href="#" class="text-sm text-purple-400 hover:text-purple-300">View all messages</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="relative">
+                <button id="profile-btn" class="glass-button p-2 flex items-center text-gray-300">
+                    <img src="https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=120&h=120&auto=format" class="rounded-full w-8 h-8 mr-2" alt="Profile">
+                    <span class="hidden md:block mr-1">Alex Morgan</span>
+                    <i class="bi bi-chevron-down"></i>
+                </button>
+                <div id="profile-dropdown" class="dropdown">
+                    <div class="p-4 border-b border-gray-700 text-center">
+                        <img src="https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=120&h=120&auto=format" class="rounded-full w-16 h-16 mx-auto mb-2" alt="Profile">
+                        <h3 class="font-semibold">Alex Morgan</h3>
+                        <p class="text-xs text-gray-400">Administrator</p>
+                    </div>
+                    <div class="py-2">
+                        <a href="#" class="flex items-center px-4 py-2 hover:bg-gray-800">
+                            <i class="bi bi-person text-lg mr-3"></i>
+                            <span>My Profile</span>
+                        </a>
+                        <a href="#" class="flex items-center px-4 py-2 hover:bg-gray-800">
+                            <i class="bi bi-gear text-lg mr-3"></i>
+                            <span>Account Settings</span>
+                        </a>
+                        <a href="#" class="flex items-center px-4 py-2 hover:bg-gray-800">
+                            <i class="bi bi-question-circle text-lg mr-3"></i>
+                            <span>Help Center</span>
+                        </a>
+                        <div class="border-t border-gray-700 my-2"></div>
+                        <a href="#" class="flex items-center px-4 py-2 text-red-400 hover:bg-gray-800">
+                            <i class="bi bi-box-arrow-right text-lg mr-3"></i>
+                            <span>Sign Out</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="main-content" class="ml-[280px] pt-[70px] p-6 pb-16">
+        <!-- Welcome Section -->
+        <div class="mb-6">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
+                <div>
+                    <h1 class="text-2xl font-bold">Welcome back, Alex</h1>
+                    <p class="text-gray-400">Here's what's happening with your projects today.</p>
+                </div>
+                <div class="mt-4 md:mt-0 flex space-x-2">
+                    <button class="glass-button flex items-center px-4 py-2 text-sm">
+                        <i class="bi bi-plus-circle mr-2"></i>
+                        <span>New Project</span>
+                    </button>
+                    <button class="glass-button flex items-center px-4 py-2 text-sm">
+                        <i class="bi bi-download mr-2"></i>
+                        <span>Export</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            <div class="glass-card p-5">
+                <div class="flex justify-between mb-2">
+                    <div>
+                        <h3 class="text-sm font-semibold text-gray-400">Total Users</h3>
+                        <p class="text-3xl font-bold stat-value">8,249</p>
+                        <div class="flex items-center mt-2 text-sm">
+                            <span class="text-success flex items-center">
+                                <i class="bi bi-arrow-up-short"></i> 12.5%
+                            </span>
+                            <span class="text-gray-400 ml-1">vs last week</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-center bg-purple-600/20 rounded-full p-3">
+                        <i class="bi bi-people-fill text-xl text-purple-500"></i>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <div class="progress">
+                        <div class="progress-bar bg-purple-500" style="width: 75%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card p-5">
+                <div class="flex justify-between mb-2">
+                    <div>
+                        <h3 class="text-sm font-semibold text-gray-400">Revenue</h3>
+                        <p class="text-3xl font-bold stat-value">$94.5K</p>
+                        <div class="flex items-center mt-2 text-sm">
+                            <span class="text-danger flex items-center">
+                                <i class="bi bi-arrow-down-short"></i> 3.2%
+                            </span>
+                            <span class="text-gray-400 ml-1">vs last week</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-center bg-green-600/20 rounded-full p-3">
+                        <i class="bi bi-currency-dollar text-xl text-green-500"></i>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <div class="progress">
+                        <div class="progress-bar bg-green-500" style="width: 65%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card p-5">
+                <div class="flex justify-between mb-2">
+                    <div>
+                        <h3 class="text-sm font-semibold text-gray-400">Orders</h3>
+                        <p class="text-3xl font-bold stat-value">1,853</p>
+                        <div class="flex items-center mt-2 text-sm">
+                            <span class="text-success flex items-center">
+                                <i class="bi bi-arrow-up-short"></i> 8.9%
+                            </span>
+                            <span class="text-gray-400 ml-1">vs last week</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-center bg-blue-600/20 rounded-full p-3">
+                        <i class="bi bi-cart-fill text-xl text-blue-500"></i>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <div class="progress">
+                        <div class="progress-bar bg-blue-500" style="width: 80%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card p-5">
+                <div class="flex justify-between mb-2">
+                    <div>
+                        <h3 class="text-sm font-semibold text-gray-400">Conversion</h3>
+                        <p class="text-3xl font-bold stat-value">4.7%</p>
+                        <div class="flex items-center mt-2 text-sm">
+                            <span class="text-success flex items-center">
+                                <i class="bi bi-arrow-up-short"></i> 1.8%
+                            </span>
+                            <span class="text-gray-400 ml-1">vs last week</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-center bg-orange-600/20 rounded-full p-3">
+                        <i class="bi bi-graph-up-arrow text-xl text-orange-500"></i>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <div class="progress">
+                        <div class="progress-bar bg-orange-500" style="width: 45%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div class="glass-card p-5">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-semibold">Revenue Overview</h3>
+                    <div class="flex space-x-2">
+                        <button class="glass-button px-3 py-1 text-xs">Weekly</button>
+                        <button class="glass-button px-3 py-1 text-xs">Monthly</button>
+                        <button class="glass-button px-3 py-1 text-xs">Yearly</button>
+                    </div>
+                </div>
+                <canvas id="revenueChart" height="300"></canvas>
+            </div>
+            <div class="glass-card p-5">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-semibold">User Activity</h3>
+                    <div class="flex space-x-2">
+                        <button class="glass-button px-3 py-1 text-xs">Desktop</button>
+                        <button class="glass-button px-3 py-1 text-xs">Mobile</button>
+                        <button class="glass-button px-3 py-1 text-xs">All</button>
+                    </div>
+                </div>
+                <canvas id="userChart" height="300"></canvas>
+            </div>
+        </div>
+
+        <!-- Recent Activity and Tasks -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <!-- Recent Transactions -->
+            <div class="glass-card lg:col-span-2 p-5">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-semibold">Recent Transactions</h3>
+                    <button class="glass-button px-3 py-1 text-xs">View All</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="text-left text-xs text-gray-400 border-b border-gray-700">
+                                <th class="pb-3 font-semibold">TRANSACTION</th>
+                                <th class="pb-3 font-semibold">DATE</th>
+                                <th class="pb-3 font-semibold">AMOUNT</th>
+                                <th class="pb-3 font-semibold">STATUS</th>
+                                <th class="pb-3 font-semibold"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-b border-gray-700/50">
+                                <td class="py-4 pr-4">
+                                    <div class="flex items-center">
+                                        <div class="bg-purple-600/20 rounded-full p-2 mr-3">
+                                            <i class="bi bi-credit-card text-purple-500"></i>
+                                        </div>
+                                        <div>
+                                            <p class="font-medium">Payment</p>
+                                            <p class="text-xs text-gray-400">Payment from #5523</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="py-4 text-gray-400">Apr 23, 2023</td>
+                                <td class="py-4 font-medium">$250.00</td>
+                                <td class="py-4">
+                                    <span class="px-2 py-1 text-xs rounded-full bg-green-500/20 text-green-400">Completed</span>
+                                </td>
+                                <td class="py-4 text-right">
+                                    <button class="text-gray-400 hover:text-white">
+                                        <i class="bi bi-three-dots-vertical"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr class="border-b border-gray-700/50">
+                                <td class="py-4 pr-4">
+                                    <div class="flex items-center">
+                                        <div class="bg-blue-600/20 rounded-full p-2 mr-3">
+                                            <i class="bi bi-wallet2 text-blue-500"></i>
+                                        </div>
+                                        <div>
+                                            <p class="font-medium">Refund</p>
+                                            <p class="text-xs text-gray-400">Refund to #1234</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="py-4 text-gray-400">Apr 21, 2023</td>
+                                <td class="py-4 font-medium">$125.00</td>
+                                <td class="py-4">
+                                    <span class="px-2 py-1 text-xs rounded-full bg-yellow-500/20 text-yellow-400">Processing</span>
+                                </td>
+                                <td class="py-4 text-right">
+                                    <button class="text-gray-400 hover:text-white">
+                                        <i class="bi bi-three-dots-vertical"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr class="border-b border-gray-700/50">
+                                <td class="py-4 pr-4">
+                                    <div class="flex items-center">
+                                        <div class="bg-red-600/20 rounded-full p-2 mr-3">
+                                            <i class="bi bi-x-octagon text-red-500"></i>
+                                        </div>
+                                        <div>
+                                            <p class="font-medium">Subscription</p>
+                                            <p class="text-xs text-gray-400">Subscription Plan #2</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="py-4 text-gray-400">Apr 19, 2023</td>
+                                <td class="py-4 font-medium">$850.00</td>
+                                <td class="py-4">
+                                    <span class="px-2 py-1 text-xs rounded-full bg-red-500/20 text-red-400">Failed</span>
+                                </td>
+                                <td class="py-4 text-right">
+                                    <button class="text-gray-400 hover:text-white">
+                                        <i class="bi bi-three-dots-vertical"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Upcoming Tasks -->
+            <div class="glass-card p-5">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-semibold">Upcoming Tasks</h3>
+                    <button class="glass-button px-3 py-1 text-xs">Add Task</button>
+                </div>
+                <div class="space-y-4">
+                    <div class="flex items-center p-3 border border-gray-700/50 rounded-lg">
+                        <input type="checkbox" class="mr-3">
+                        <div>
+                            <p class="font-medium">Quarterly Review</p>
+                            <p class="text-xs text-gray-400">Today, 2:00 PM</p>
+                        </div>
+                        <div class="ml-auto">
+                            <span class="px-2 py-1 text-xs rounded-full bg-red-500/20 text-red-400">High</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center p-3 border border-gray-700/50 rounded-lg">
+                        <input type="checkbox" class="mr-3">
+                        <div>
+                            <p class="font-medium">Update Documentation</p>
+                            <p class="text-xs text-gray-400">Tomorrow, 10:00 AM</p>
+                        </div>
+                        <div class="ml-auto">
+                            <span class="px-2 py-1 text-xs rounded-full bg-yellow-500/20 text-yellow-400">Medium</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center p-3 border border-gray-700/50 rounded-lg">
+                        <input type="checkbox" class="mr-3">
+                        <div>
+                            <p class="font-medium">Meeting with Clients</p>
+                            <p class="text-xs text-gray-400">Apr 25, 1:30 PM</p>
+                        </div>
+                        <div class="ml-auto">
+                            <span class="px-2 py-1 text-xs rounded-full bg-green-500/20 text-green-400">Low</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center p-3 border border-gray-700/50 rounded-lg">
+                        <input type="checkbox" class="mr-3">
+                        <div>
+                            <p class="font-medium">Server Maintenance</p>
+                            <p class="text-xs text-gray-400">Apr 26, 12:00 AM</p>
+                        </div>
+                        <div class="ml-auto">
+                            <span class="px-2 py-1 text-xs rounded-full bg-red-500/20 text-red-400">High</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4 text-center">
+                    <a href="#" class="text-sm text-purple-400 hover:text-purple-300">View All Tasks</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Projects and Team Members -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Projects -->
+            <div class="glass-card lg:col-span-2 p-5">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-semibold">Active Projects</h3>
+                    <button class="glass-button px-3 py-1 text-xs">New Project</button>
+                </div>
+                <div class="space-y-4">
+                    <div class="p-4 border border-gray-700/50 rounded-lg">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h4 class="font-semibold">Website Redesign</h4>
+                                <p class="text-xs text-gray-400 flex items-center">
+                                    <i class="bi bi-calendar2-event mr-1"></i> 
+                                    <span>May 12, 2023</span>
+                                </p>
+                            </div>
+                            <span class="px-2 py-1 text-xs rounded-full bg-blue-500/20 text-blue-400">In Progress</span>
+                        </div>
+                        <p class="text-sm text-gray-400 mb-3">Redesign the corporate website to improve UI/UX and mobile responsiveness.</p>
+                        <div class="flex justify-between items-center">
+                            <div class="flex -space-x-2">
+                                <img src="https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=80&h=80&auto=format" class="w-8 h-8 rounded-full border-2 border-gray-800" alt="Team Member">
+                                <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&auto=format" class="w-8 h-8 rounded-full border-2 border-gray-800" alt="Team Member">
+                                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&auto=format" class="w-8 h-8 rounded-full border-2 border-gray-800" alt="Team Member">
+                            </div>
+                            <div class="text-sm text-gray-400">
+                                <span>65%</span>
+                                <div class="w-24 h-1.5 bg-gray-700 rounded-full mt-1">
+                                    <div class="h-full bg-blue-500 rounded-full" style="width: 65%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-4 border border-gray-700/50 rounded-lg">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h4 class="font-semibold">Mobile App Development</h4>
+                                <p class="text-xs text-gray-400 flex items-center">
+                                    <i class="bi bi-calendar2-event mr-1"></i> 
+                                    <span>Jun 30, 2023</span>
+                                </p>
+                            </div>
+                            <span class="px-2 py-1 text-xs rounded-full bg-purple-500/20 text-purple-400">Planning</span>
+                        </div>
+                        <p class="text-sm text-gray-400 mb-3">Develop a mobile application for clients to track orders and manage accounts.</p>
+                        <div class="flex justify-between items-center">
+                            <div class="flex -space-x-2">
+                                <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80&h=80&auto=format" class="w-8 h-8 rounded-full border-2 border-gray-800" alt="Team Member">
+                                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&auto=format" class="w-8 h-8 rounded-full border-2 border-gray-800" alt="Team Member">
+                            </div>
+                            <div class="text-sm text-gray-400">
+                                <span>25%</span>
+                                <div class="w-24 h-1.5 bg-gray-700 rounded-full mt-1">
+                                    <div class="h-full bg-purple-500 rounded-full" style="width: 25%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Team Members -->
+            <div class="glass-card p-5">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-semibold">Team Members</h3>
+                    <button class="glass-button px-3 py-1 text-xs">View All</button>
+                </div>
+                <div class="space-y-4">
+                    <div class="flex items-center">
+                        <img src="https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=80&h=80&auto=format" class="w-10 h-10 rounded-full mr-3" alt="Team Member">
+                        <div>
+                            <p class="font-medium">Alex Morgan</p>
+                            <p class="text-xs text-gray-400">Project Manager</p>
+                        </div>
+                        <button class="ml-auto glass-button w-8 h-8 flex items-center justify-center">
+                            <i class="bi bi-chat-dots text-gray-400"></i>
+                        </button>
+                    </div>
+                    <div class="flex items-center">
+                        <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&auto=format" class="w-10 h-10 rounded-full mr-3" alt="Team Member">
+                        <div>
+                            <p class="font-medium">Sarah Wilson</p>
+                            <p class="text-xs text-gray-400">Lead Designer</p>
+                        </div>
+                        <button class="ml-auto glass-button w-8 h-8 flex items-center justify-center">
+                            <i class="bi bi-chat-dots text-gray-400"></i>
+                        </button>
+                    </div>
+                    <div class="flex items-center">
+                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&auto=format" class="w-10 h-10 rounded-full mr-3" alt="Team Member">
+                        <div>
+                            <p class="font-medium">Michael Brown</p>
+                            <p class="text-xs text-gray-400">Senior Developer</p>
+                        </div>
+                        <button class="ml-auto glass-button w-8 h-8 flex items-center justify-center">
+                            <i class="bi bi-chat-dots text-gray-400"></i>
+                        </button>
+                    </div>
+                    <div class="flex items-center">
+                        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&auto=format" class="w-10 h-10 rounded-full mr-3" alt="Team Member">
+                        <div>
+                            <p class="font-medium">Emily Chen</p>
+                            <p class="text-xs text-gray-400">UI/UX Designer</p>
+                        </div>
+                        <button class="ml-auto glass-button w-8 h-8 flex items-center justify-center">
+                            <i class="bi bi-chat-dots text-gray-400"></i>
+                        </button>
+                    </div>
+                    <div class="flex items-center">
+                        <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80&h=80&auto=format" class="w-10 h-10 rounded-full mr-3" alt="Team Member">
+                        <div>
+                            <p class="font-medium">David Kim</p>
+                            <p class="text-xs text-gray-400">Backend Developer</p>
+                        </div>
+                        <button class="ml-auto glass-button w-8 h-8 flex items-center justify-center">
+                            <i class="bi bi-chat-dots text-gray-400"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Get DOM elements
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('main-content');
+        const header = document.querySelector('.header');
+        const sidebarToggle = document.getElementById('sidebar-toggle');
+        const themeToggle = document.getElementById('themeToggle');
+        const fullscreenBtn = document.getElementById('fullscreen-btn');
+        const dropdownToggles = {
+            notifications: document.getElementById('notifications-btn'),
+            messages: document.getElementById('messages-btn'),
+            profile: document.getElementById('profile-btn'),
+            search: document.querySelector('.glass-input')
+        };
+        const dropdowns = {
+            notifications: document.getElementById('notifications-dropdown'),
+            messages: document.getElementById('messages-dropdown'),
+            profile: document.getElementById('profile-dropdown'),
+            search: document.getElementById('search-suggestions')
+        };
+        
+        // Theme Toggle functionality
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('light-mode');
+            const icon = themeToggle.querySelector('i');
+            if (document.body.classList.contains('light-mode')) {
+                icon.classList.remove('bi-moon-stars-fill');
+                icon.classList.add('bi-sun-fill');
+            } else {
+                icon.classList.remove('bi-sun-fill');
+                icon.classList.add('bi-moon-stars-fill');
+            }
+        });
+        
+        // Sidebar Toggle functionality
+        sidebarToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+            const sidebarWidth = sidebar.classList.contains('collapsed') ? '80px' : '280px';
+            mainContent.style.marginLeft = sidebarWidth;
+            header.style.marginLeft = sidebarWidth;
+            header.style.width = `calc(100% - ${sidebarWidth})`;
+        });
+        
+        // Keyboard shortcut for sidebar toggle
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'b') {
+                e.preventDefault();
+                sidebarToggle.click();
+            }
+        });
+        
+        // Fullscreen toggle
+        fullscreenBtn.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.error(`Error attempting to enable fullscreen mode: ${err.message}`);
+                });
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        });
+        
+        // Dropdown functionality
+        Object.keys(dropdownToggles).forEach(key => {
+            if (dropdownToggles[key] && dropdowns[key]) {
+                dropdownToggles[key].addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    
+                    // Close all other dropdowns
+                    Object.keys(dropdowns).forEach(k => {
+                        if (k !== key && dropdowns[k]) {
+                            dropdowns[k].classList.remove('open');
+                        }
+                    });
+                    
+                    // Toggle current dropdown
+                    dropdowns[key].classList.toggle('open');
+                });
+            }
+        });
+        
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', () => {
+            Object.values(dropdowns).forEach(dropdown => {
+                if (dropdown) {
+                    dropdown.classList.remove('open');
+                }
+            });
+        });
+        
+        // Prevent dropdown close when clicking inside dropdown
+        Object.values(dropdowns).forEach(dropdown => {
+            if (dropdown) {
+                dropdown.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                });
+            }
+        });
+        
+        // Submenu toggle functionality
+        const submenuToggles = document.querySelectorAll('.sidebar-dropdown button');
+        submenuToggles.forEach(toggle => {
+            toggle.addEventListener('click', () => {
+                const submenu = toggle.nextElementSibling;
+                const icon = toggle.querySelector('.arrow-icon');
+                
+                if (submenu.classList.contains('open')) {
+                    submenu.classList.remove('open');
+                    icon.style.transform = 'rotate(0deg)';
+                } else {
+                    submenu.classList.add('open');
+                    icon.style.transform = 'rotate(180deg)';
+                }
+            });
+        });
+        
+        // Date display
+        function updateDate() {
+            const now = new Date();
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            };
+            document.getElementById('current-date').textContent = now.toLocaleDateString(undefined, options);
+        }
+        updateDate();
+        
+        // Time display & update
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('time').textContent = now.toLocaleTimeString();
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+        
+        // Location & IP fetch
+        fetch('https://ipapi.co/json/')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('location').textContent = `${data.city}, ${data.region}`;
+                document.getElementById('ip').textContent = data.ip;
+            })
+            .catch(error => {
+                document.getElementById('location').textContent = 'Location unavailable';
+                document.getElementById('ip').textContent = 'IP unavailable';
+                console.error('Error fetching location data:', error);
+            });
+        
+        // Charts configuration
+        Chart.defaults.color = 'rgba(255, 255, 255, 0.7)';
+        Chart.defaults.font.family = "'Poppins', sans-serif";
+        
+        // Revenue Chart
+        const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+        const revenueChart = new Chart(revenueCtx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                datasets: [{
+                    label: 'Revenue',
+                    data: [35000, 49000, 42000, 53000, 45000, 55000, 60000, 58000, 63000, 68000, 65000, 71000],
+                    borderColor: '#4f46e5',
+                    backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#4f46e5',
+                    pointBorderColor: '#fff',
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        backgroundColor: 'rgba(15, 23, 42, 0.8)',
+                        titleColor: '#fff',
+                        bodyColor: '#cbd5e1',
+                        borderColor: 'rgba(148, 163, 184, 0.2)',
+                        borderWidth: 1,
+                        padding: 10,
+                        displayColors: false,
+                        callbacks: {
+                            label: function(context) {
+                                return `Revenue: $${context.raw.toLocaleString()}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false,
+                            drawBorder: false
+                        }
+                    },
+                    y: {
+                        grid: {
+                            color: 'rgba(148, 163, 184, 0.1)',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + (value / 1000) + 'k';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // User Activity Chart
+        const userCtx = document.getElementById('userChart').getContext('2d');
+        const userChart = new Chart(userCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Active Users',
+                    data: [1200, 1900, 1500, 1700, 2100, 1500, 1300],
+                    backgroundColor: '#10b981',
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        backgroundColor: 'rgba(15, 23, 42, 0.8)',
+                        titleColor: '#fff',
+                        bodyColor: '#cbd5e1',
+                        borderColor: 'rgba(148, 163, 184, 0.2)',
+                        borderWidth: a1,
+                        padding: 10,
+                        displayColors: false,
+                        callbacks: {
+                            label: function(context) {
+                                return `Users: ${context.raw.toLocaleString()}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false,
+                            drawBorder: false
+                        }
+                    },
+                    y: {
+                        grid: {
+                            color: 'rgba(148, 163, 184, 0.1)',
+                            drawBorder: false
+                        }
+                    }
+                }
+            }
+        });
+
+        // Set initial responsive state
+        function setResponsiveState() {
+            if (window.innerWidth <= 1024) {
+                sidebar.classList.add('collapsed');
+                mainContent.style.marginLeft = '80px';
+                header.style.marginLeft = '80px';
+                header.style.width = 'calc(100% - 80px)';
+            } else {
+                sidebar.classList.remove('collapsed');
+                mainContent.style.marginLeft = '280px';
+                header.style.marginLeft = '280px';
+                header.style.width = 'calc(100% - 280px)';
+            }
+        }
+        
+        // Call on load and resize
+        window.addEventListener('resize', setResponsiveState);
+        setResponsiveState();
+    </script>
+<script>document.body.addEventListener('wheel', e => { if (!e.ctrlKey) return; e.preventDefault(); return }, { passive: false })</script>
+	</body>
+</html>
